@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, Search, Filter } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Search, Filter, Lock } from 'lucide-react';
 import { transactions } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 
 const peso = (n: number) => '₱' + n.toLocaleString();
 
 export default function Transactions() {
+  const { role } = useAuth();
+  const isOwner = role === 'owner';
   const [filter, setFilter] = useState<'All' | 'Buy' | 'Sell'>('All');
   const [search, setSearch] = useState('');
 
@@ -21,38 +24,49 @@ export default function Transactions() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Transactions</h1>
-        <p className="text-slate-500 text-sm mt-1">Record and manage all buying and selling transactions</p>
+        <p className="text-slate-500 text-sm mt-1">
+          {isOwner ? 'Record and manage all buying and selling transactions' : 'Encode and view transaction records'}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
-            <ArrowDownCircle size={20} className="text-blue-600" />
+      {isOwner ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center">
+              <ArrowDownCircle size={20} className="text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Bought</p>
+              <p className="text-xl font-bold text-slate-800">{peso(totalBuy)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-slate-500">Total Bought</p>
-            <p className="text-xl font-bold text-slate-800">{peso(totalBuy)}</p>
+          <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center">
+              <ArrowUpCircle size={20} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Total Sold</p>
+              <p className="text-xl font-bold text-slate-800">{peso(totalSell)}</p>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <ArrowUpCircle size={20} className="text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Net Gain</p>
+              <p className="text-xl font-bold text-emerald-700">{peso(totalSell - totalBuy)}</p>
+            </div>
           </div>
         </div>
-        <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center">
-            <ArrowUpCircle size={20} className="text-green-600" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500">Total Sold</p>
-            <p className="text-xl font-bold text-slate-800">{peso(totalSell)}</p>
-          </div>
+      ) : (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+          <Lock size={16} className="text-blue-500 shrink-0" />
+          <p className="text-sm text-blue-700">
+            <span className="font-medium">Staff view:</span> Financial summaries (totals, price/kg, amounts) are hidden. You can view and encode operational transaction data.
+          </p>
         </div>
-        <div className="bg-card rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <ArrowUpCircle size={20} className="text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500">Net Gain</p>
-            <p className="text-xl font-bold text-emerald-700">{peso(totalSell - totalBuy)}</p>
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="bg-card rounded-xl shadow-sm border border-slate-100">
         <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -92,8 +106,8 @@ export default function Transactions() {
                 <th className="px-4 py-3 text-left font-medium">Farmer / Buyer</th>
                 <th className="px-4 py-3 text-right font-medium">Weight (kg)</th>
                 <th className="px-4 py-3 text-right font-medium">Moisture %</th>
-                <th className="px-4 py-3 text-right font-medium">Price/kg</th>
-                <th className="px-4 py-3 text-right font-medium">Total</th>
+                {isOwner && <th className="px-4 py-3 text-right font-medium">Price/kg</th>}
+                {isOwner && <th className="px-4 py-3 text-right font-medium">Total</th>}
                 <th className="px-4 py-3 text-center font-medium">Status</th>
               </tr>
             </thead>
@@ -113,8 +127,8 @@ export default function Transactions() {
                   <td className="px-4 py-3 text-slate-700">{t.farmer}</td>
                   <td className="px-4 py-3 text-right text-slate-700">{t.weight.toLocaleString()}</td>
                   <td className="px-4 py-3 text-right text-slate-600">{t.moisture}%</td>
-                  <td className="px-4 py-3 text-right text-slate-600">₱{t.pricePerKg}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-slate-800">{peso(t.total)}</td>
+                  {isOwner && <td className="px-4 py-3 text-right text-slate-600">₱{t.pricePerKg}</td>}
+                  {isOwner && <td className="px-4 py-3 text-right font-semibold text-slate-800">{peso(t.total)}</td>}
                   <td className="px-4 py-3 text-center">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                       t.status === 'Completed' ? 'bg-green-100 text-green-700' :

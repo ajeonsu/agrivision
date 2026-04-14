@@ -9,6 +9,12 @@ import Batches from './pages/Batches';
 import Resources from './pages/Resources';
 import Analytics from './pages/Analytics';
 
+function OwnerOnly({ children }: { children: React.ReactNode }) {
+  const { role } = useAuth();
+  if (role !== 'owner') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function Layout() {
   const { isLoggedIn } = useAuth();
 
@@ -23,8 +29,8 @@ function Layout() {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/scheduling" element={<Scheduling />} />
           <Route path="/batches" element={<Batches />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/resources" element={<OwnerOnly><Resources /></OwnerOnly>} />
+          <Route path="/analytics" element={<OwnerOnly><Analytics /></OwnerOnly>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

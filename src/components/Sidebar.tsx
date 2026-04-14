@@ -8,20 +8,30 @@ import {
   BarChart3,
   LogOut,
   Wheat,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const links = [
+type Link = {
+  to: string;
+  icon: typeof LayoutDashboard;
+  label: string;
+  ownerOnly?: boolean;
+};
+
+const links: Link[] = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/scheduling', icon: CalendarClock, label: 'Scheduling' },
   { to: '/batches', icon: Boxes, label: 'Batch Tracking' },
-  { to: '/resources', icon: Wrench, label: 'Resources' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/resources', icon: Wrench, label: 'Resources', ownerOnly: true },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics', ownerOnly: true },
 ];
 
 export default function Sidebar() {
   const { logout, user, role } = useAuth();
+
+  const visibleLinks = links.filter((l) => !l.ownerOnly || role === 'owner');
 
   return (
     <aside className="w-64 bg-sidebar text-white flex flex-col min-h-screen fixed left-0 top-0 z-30">
@@ -38,7 +48,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-1">
-        {links.map((l) => (
+        {visibleLinks.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
@@ -55,16 +65,36 @@ export default function Sidebar() {
             {l.label}
           </NavLink>
         ))}
+
+        {role === 'staff' && (
+          <div className="mt-4 mx-1 p-3 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <Shield size={14} />
+              <span>Staff Access</span>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+              Analytics & Resources are restricted to owner accounts.
+            </p>
+          </div>
+        )}
       </nav>
 
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center text-sm font-bold text-primary-light">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+            role === 'owner'
+              ? 'bg-amber-500/30 text-amber-300'
+              : 'bg-primary/30 text-primary-light'
+          }`}>
             {user.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user}</p>
-            <p className="text-xs text-slate-400 capitalize">{role}</p>
+            <p className={`text-xs capitalize ${
+              role === 'owner' ? 'text-amber-400' : 'text-slate-400'
+            }`}>
+              {role === 'owner' ? 'Owner / Admin' : 'Staff'}
+            </p>
           </div>
         </div>
         <button

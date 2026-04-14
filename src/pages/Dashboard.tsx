@@ -7,13 +7,16 @@ import {
   Droplets,
   Package,
   CalendarClock,
+  Lock,
+  ClipboardList,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend, PieChart, Pie, Cell,
 } from 'recharts';
 import StatCard from '../components/StatCard';
-import { monthlySales, volumeData, batches, schedules, resources } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { monthlySales, volumeData, batches, schedules, resources, transactions } from '../data/mockData';
 
 const peso = (n: number) => '₱' + n.toLocaleString();
 
@@ -35,12 +38,12 @@ const batchStatusData = Object.entries(
 const todaySchedules = schedules.filter((s) => s.date === '2026-04-14');
 const activeResources = resources.filter((r) => r.status === 'Active').length;
 
-export default function Dashboard() {
+function OwnerDashboard() {
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-        <p className="text-slate-500 text-sm mt-1">Overview of your palay trading operations</p>
+        <p className="text-slate-500 text-sm mt-1">Full overview of your palay trading operations</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -122,34 +125,7 @@ export default function Dashboard() {
               {todaySchedules.length} activities
             </span>
           </div>
-          <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
-            {todaySchedules.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                  s.service === 'Drying' ? 'bg-amber-100 text-amber-600' :
-                  s.service === 'Hauling' ? 'bg-blue-100 text-blue-600' :
-                  s.service === 'Delivery' ? 'bg-green-100 text-green-600' :
-                  'bg-purple-100 text-purple-600'
-                }`}>
-                  {s.service === 'Drying' ? <Droplets size={16} /> :
-                   s.service === 'Hauling' ? <Truck size={16} /> :
-                   s.service === 'Delivery' ? <Package size={16} /> :
-                   <Users size={16} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-700 truncate">{s.resource}</p>
-                  <p className="text-xs text-slate-500">{s.timeSlot} &middot; {s.details}</p>
-                </div>
-                <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
-                  s.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                  s.status === 'In Progress' ? 'bg-amber-100 text-amber-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
-                  {s.status}
-                </span>
-              </div>
-            ))}
-          </div>
+          <ScheduleList />
         </div>
       </div>
 
@@ -184,4 +160,153 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function StaffDashboard() {
+  const pendingTxn = transactions.filter(t => t.status === 'Pending' || t.status === 'Processing').length;
+  const dryingBatches = batches.filter(b => b.status === 'Drying');
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800">Staff Dashboard</h1>
+        <p className="text-slate-500 text-sm mt-1">Your operational overview — encoding, scheduling & batch monitoring</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title="Today's Schedules" value={String(todaySchedules.length)} change="Activities to manage" changeType="up" icon={CalendarClock} color="bg-blue-500" />
+        <StatCard title="Batches Drying" value={String(dryingBatches.length)} change="Currently in process" changeType="up" icon={Droplets} color="bg-amber-500" />
+        <StatCard title="Pending Transactions" value={String(pendingTxn)} change="Needs attention" changeType="down" icon={ClipboardList} color="bg-red-500" />
+        <StatCard title="Total Batches" value={String(batches.length)} change={`${batches.filter(b => b.status === 'Storage').length} in storage`} changeType="up" icon={Package} color="bg-purple-500" />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="bg-card rounded-xl shadow-sm border border-slate-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-slate-800">Today's Schedule</h3>
+            <span className="text-xs bg-primary/10 text-primary font-medium px-2.5 py-1 rounded-full">
+              {todaySchedules.length} activities
+            </span>
+          </div>
+          <ScheduleList />
+        </div>
+
+        <div className="bg-card rounded-xl shadow-sm border border-slate-100 p-5">
+          <h3 className="text-base font-semibold text-slate-800 mb-4">Batches Currently Drying</h3>
+          {dryingBatches.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">No batches currently drying</p>
+          ) : (
+            <div className="space-y-3">
+              {dryingBatches.map((b) => (
+                <div key={b.id} className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{b.id}</p>
+                      <p className="text-xs text-slate-500">{b.farmer} &middot; {b.dryingMethod}</p>
+                    </div>
+                    <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{b.progress}%</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-slate-600 mb-2">
+                    <span>Weight: {b.weightIn.toLocaleString()} kg</span>
+                    <span>Moisture: {b.moisture}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full" style={{ width: `${b.progress}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl shadow-sm border border-slate-100 p-5">
+        <h3 className="text-base font-semibold text-slate-800 mb-4">Recent Transactions</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-2.5 text-left font-medium">ID</th>
+                <th className="px-4 py-2.5 text-left font-medium">Date</th>
+                <th className="px-4 py-2.5 text-left font-medium">Type</th>
+                <th className="px-4 py-2.5 text-left font-medium">Farmer / Buyer</th>
+                <th className="px-4 py-2.5 text-right font-medium">Weight</th>
+                <th className="px-4 py-2.5 text-center font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.slice(0, 5).map((t) => (
+                <tr key={t.id} className="border-t border-slate-50">
+                  <td className="px-4 py-2.5 font-medium text-slate-700">{t.id}</td>
+                  <td className="px-4 py-2.5 text-slate-600">{t.date}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      t.type === 'Buy' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                    }`}>{t.type}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-slate-700">{t.farmer}</td>
+                  <td className="px-4 py-2.5 text-right text-slate-600">{t.weight.toLocaleString()} kg</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      t.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                      t.status === 'Processing' ? 'bg-amber-100 text-amber-700' :
+                      'bg-slate-100 text-slate-600'
+                    }`}>{t.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="bg-slate-100 border border-slate-200 rounded-xl p-5 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center">
+          <Lock size={18} className="text-slate-500" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-slate-700">Restricted Access</p>
+          <p className="text-xs text-slate-500">Analytics, resource management, and financial reports are available to owner accounts only.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleList() {
+  return (
+    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+      {todaySchedules.map((s) => (
+        <div key={s.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+            s.service === 'Drying' ? 'bg-amber-100 text-amber-600' :
+            s.service === 'Hauling' ? 'bg-blue-100 text-blue-600' :
+            s.service === 'Delivery' ? 'bg-green-100 text-green-600' :
+            'bg-purple-100 text-purple-600'
+          }`}>
+            {s.service === 'Drying' ? <Droplets size={16} /> :
+             s.service === 'Hauling' ? <Truck size={16} /> :
+             s.service === 'Delivery' ? <Package size={16} /> :
+             <Users size={16} />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-slate-700 truncate">{s.resource}</p>
+            <p className="text-xs text-slate-500">{s.timeSlot} &middot; {s.details}</p>
+          </div>
+          <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
+            s.status === 'Completed' ? 'bg-green-100 text-green-700' :
+            s.status === 'In Progress' ? 'bg-amber-100 text-amber-700' :
+            'bg-blue-100 text-blue-700'
+          }`}>
+            {s.status}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const { role } = useAuth();
+  return role === 'owner' ? <OwnerDashboard /> : <StaffDashboard />;
 }
