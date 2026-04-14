@@ -2,7 +2,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   LineChart, Line, AreaChart, Area, ComposedChart,
 } from 'recharts';
-import { TrendingUp, Calculator, GitCompare, Lightbulb } from 'lucide-react';
+import { useState } from 'react';
+import { TrendingUp, Calculator, GitCompare, Lightbulb, FileDown, Check } from 'lucide-react';
 import { monthlySales, yearlySalesComparison, predictionData, volumeData } from '../data/mockData';
 
 const peso = (n: number) => '₱' + n.toLocaleString();
@@ -21,13 +22,86 @@ const resourceUtil = [
   { name: 'Labor Team B', days: 18, category: 'Worker' },
 ];
 
+function exportCSV() {
+  const header = 'Month,Revenue,Expenses,Net Income\n';
+  const rows = monthlySales.map(m => `${m.month},${m.revenue},${m.expenses},${m.net}`).join('\n');
+  const totals = `\nTOTAL,${totalRevenue},${totalExpenses},${totalNet}`;
+  const blob = new Blob([header + rows + totals], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `AgriVision_Financial_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportFullReport() {
+  let content = 'AGRIVISION - MONTHLY OPERATIONS & FINANCIAL REPORT\n';
+  content += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+  content += '=== FINANCIAL SUMMARY ===\n';
+  content += `Total Revenue: P${totalRevenue.toLocaleString()}\n`;
+  content += `Total Expenses: P${totalExpenses.toLocaleString()}\n`;
+  content += `Net Income: P${totalNet.toLocaleString()}\n`;
+  content += `Average Monthly Revenue: P${avgMonthly.toLocaleString()}\n\n`;
+  content += '=== MONTHLY BREAKDOWN ===\n';
+  content += 'Month,Revenue,Expenses,Net Income\n';
+  monthlySales.forEach(m => { content += `${m.month},P${m.revenue.toLocaleString()},P${m.expenses.toLocaleString()},P${m.net.toLocaleString()}\n`; });
+  content += '\n=== YEARLY COMPARISON (Harvest vs Non-Harvest) ===\n';
+  content += 'Year,Harvest Season,Non-Harvest Season,Total\n';
+  yearlySalesComparison.forEach(y => { content += `${y.year},P${y.harvest.toLocaleString()},P${y.nonHarvest.toLocaleString()},P${(y.harvest + y.nonHarvest).toLocaleString()}\n`; });
+  content += '\n=== VOLUME DATA (kg) ===\n';
+  content += 'Month,Bought,Dried,Sold\n';
+  volumeData.forEach(v => { content += `${v.month},${v.bought},${v.dried},${v.sold}\n`; });
+  content += '\n=== SALES FORECAST ===\n';
+  content += 'Month,Actual,Predicted\n';
+  predictionData.forEach(p => { content += `${p.month},${p.actual || '-'},${p.predicted || '-'}\n`; });
+
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `AgriVision_Full_Report_${new Date().toISOString().slice(0, 10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Analytics() {
+  const [exported, setExported] = useState(false);
+
+  const handleExport = (type: 'csv' | 'full') => {
+    if (type === 'csv') exportCSV();
+    else exportFullReport();
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Data Analytics</h1>
-        <p className="text-slate-500 text-sm mt-1">Accounting, comparison, and prediction of sales — data-driven decision support</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Data Analytics</h1>
+          <p className="text-slate-500 text-sm mt-1">Accounting, comparison, and prediction of sales — data-driven decision support</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => handleExport('csv')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-sm font-medium text-slate-700 transition-colors">
+            <FileDown size={16} />
+            Export CSV
+          </button>
+          <button onClick={() => handleExport('full')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/25">
+            <FileDown size={16} />
+            Generate Report
+          </button>
+        </div>
       </div>
+
+      {exported && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+          <Check size={18} className="text-green-600" />
+          <p className="text-sm text-green-700 font-medium">Report downloaded successfully!</p>
+        </div>
+      )}
 
       {/* ACCOUNTING OF SALES */}
       <div className="bg-card rounded-xl shadow-sm border border-slate-100 p-5">

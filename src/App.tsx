@@ -7,6 +7,7 @@ import Transactions from './pages/Transactions';
 import Scheduling from './pages/Scheduling';
 import Batches from './pages/Batches';
 import Resources from './pages/Resources';
+import Costs from './pages/Costs';
 import Analytics from './pages/Analytics';
 
 function OwnerOnly({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ function Layout() {
           <Route path="/scheduling" element={<Scheduling />} />
           <Route path="/batches" element={<Batches />} />
           <Route path="/resources" element={<OwnerOnly><Resources /></OwnerOnly>} />
+          <Route path="/costs" element={<OwnerOnly><Costs /></OwnerOnly>} />
           <Route path="/analytics" element={<OwnerOnly><Analytics /></OwnerOnly>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

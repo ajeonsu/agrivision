@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowDownCircle, ArrowUpCircle, Search, Filter, Lock } from 'lucide-react';
-import { transactions } from '../data/mockData';
+import { ArrowDownCircle, ArrowUpCircle, Search, Filter, Lock, Plus, Check } from 'lucide-react';
+import { transactions as initialTxns, type Transaction } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import Modal from '../components/Modal';
 
 const peso = (n: number) => '₱' + n.toLocaleString();
 
@@ -10,24 +11,78 @@ export default function Transactions() {
   const isOwner = role === 'owner';
   const [filter, setFilter] = useState<'All' | 'Buy' | 'Sell'>('All');
   const [search, setSearch] = useState('');
+  const [txns, setTxns] = useState<Transaction[]>(initialTxns);
+  const [showForm, setShowForm] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const filtered = transactions.filter((t) => {
+  const [form, setForm] = useState({
+    type: 'Buy' as 'Buy' | 'Sell',
+    farmer: '',
+    weight: '',
+    moisture: '',
+    pricePerKg: '',
+    date: new Date().toISOString().slice(0, 10),
+  });
+
+  const filtered = txns.filter((t) => {
     if (filter !== 'All' && t.type !== filter) return false;
     if (search && !t.farmer.toLowerCase().includes(search.toLowerCase()) && !t.id.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  const totalBuy = transactions.filter(t => t.type === 'Buy').reduce((s, t) => s + t.total, 0);
-  const totalSell = transactions.filter(t => t.type === 'Sell').reduce((s, t) => s + t.total, 0);
+  const totalBuy = txns.filter(t => t.type === 'Buy').reduce((s, t) => s + t.total, 0);
+  const totalSell = txns.filter(t => t.type === 'Sell').reduce((s, t) => s + t.total, 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const w = parseFloat(form.weight);
+    const p = parseFloat(form.pricePerKg);
+    const m = parseFloat(form.moisture);
+    if (!form.farmer || isNaN(w) || isNaN(p) || isNaN(m)) return;
+
+    const newTxn: Transaction = {
+      id: `TXN-${String(txns.length + 1).padStart(3, '0')}`,
+      date: form.date,
+      type: form.type,
+      farmer: form.farmer,
+      weight: w,
+      moisture: m,
+      pricePerKg: p,
+      total: w * p,
+      status: 'Pending',
+    };
+
+    setTxns([newTxn, ...txns]);
+    setShowForm(false);
+    setForm({ type: 'Buy', farmer: '', weight: '', moisture: '', pricePerKg: '', date: new Date().toISOString().slice(0, 10) });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Transactions</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          {isOwner ? 'Record and manage all buying and selling transactions' : 'Encode and view transaction records'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Transactions</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {isOwner ? 'Record and manage all buying and selling transactions' : 'Encode and view transaction records'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/25"
+        >
+          <Plus size={16} />
+          Add Transaction
+        </button>
       </div>
+
+      {saved && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-pulse">
+          <Check size={18} className="text-green-600" />
+          <p className="text-sm text-green-700 font-medium">Transaction recorded successfully!</p>
+        </div>
+      )}
 
       {isOwner ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -63,7 +118,7 @@ export default function Transactions() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
           <Lock size={16} className="text-blue-500 shrink-0" />
           <p className="text-sm text-blue-700">
-            <span className="font-medium">Staff view:</span> Financial summaries (totals, price/kg, amounts) are hidden. You can view and encode operational transaction data.
+            <span className="font-medium">Staff view:</span> Financial summaries and pricing are restricted to owner accounts.
           </p>
         </div>
       )}
@@ -145,9 +200,82 @@ export default function Transactions() {
         </div>
 
         <div className="p-4 border-t border-slate-100 text-xs text-slate-500">
-          Showing {filtered.length} of {transactions.length} transactions
+          Showing {filtered.length} of {txns.length} transactions
         </div>
       </div>
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="Record New Transaction">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Transaction Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              {(['Buy', 'Sell'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setForm({ ...form, type: t })}
+                  className={`py-2.5 rounded-lg text-sm font-medium border-2 transition-all ${
+                    form.type === t
+                      ? t === 'Buy' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  }`}
+                >
+                  {t === 'Buy' ? 'Buy (Procurement)' : 'Sell'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Date</label>
+            <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              {form.type === 'Buy' ? 'Farmer / Agent Name' : 'Buyer Name'}
+            </label>
+            <input type="text" value={form.farmer} onChange={(e) => setForm({ ...form, farmer: e.target.value })}
+              placeholder={form.type === 'Buy' ? 'e.g. Juan Dela Cruz' : 'e.g. NFA Warehouse'}
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Weight (kg)</label>
+              <input type="number" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                placeholder="e.g. 2500"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Moisture %</label>
+              <input type="number" step="0.1" value={form.moisture} onChange={(e) => setForm({ ...form, moisture: e.target.value })}
+                placeholder="e.g. 18.5"
+                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Price per kg (₱)</label>
+            <input type="number" step="0.5" value={form.pricePerKg} onChange={(e) => setForm({ ...form, pricePerKg: e.target.value })}
+              placeholder="e.g. 21"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+
+          {form.weight && form.pricePerKg && (
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <p className="text-xs text-slate-500">Auto-calculated Total</p>
+              <p className="text-xl font-bold text-slate-800">{peso(parseFloat(form.weight) * parseFloat(form.pricePerKg))}</p>
+            </div>
+          )}
+
+          <button type="submit"
+            className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium text-sm transition-colors">
+            Record Transaction
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }

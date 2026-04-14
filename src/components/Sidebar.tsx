@@ -5,6 +5,7 @@ import {
   CalendarClock,
   Boxes,
   Wrench,
+  Wallet,
   BarChart3,
   LogOut,
   Wheat,
@@ -25,6 +26,7 @@ const links: Link[] = [
   { to: '/scheduling', icon: CalendarClock, label: 'Scheduling' },
   { to: '/batches', icon: Boxes, label: 'Batch Tracking' },
   { to: '/resources', icon: Wrench, label: 'Resources', ownerOnly: true },
+  { to: '/costs', icon: Wallet, label: 'Operational Costs', ownerOnly: true },
   { to: '/analytics', icon: BarChart3, label: 'Analytics', ownerOnly: true },
 ];
 
