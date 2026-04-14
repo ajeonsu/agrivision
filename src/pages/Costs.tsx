@@ -149,7 +149,7 @@ export default function Costs() {
                   <Cell key={entry.name} fill={catColors[entry.name as keyof typeof catColors]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number) => peso(v)} />
+              <Tooltip formatter={(v) => peso(Number(v))} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex gap-4 justify-center mt-2">
@@ -169,7 +169,7 @@ export default function Costs() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" fontSize={12} tickLine={false} />
               <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₱${v / 1000}k`} />
-              <Tooltip formatter={(v: number) => peso(v)} />
+              <Tooltip formatter={(v) => peso(Number(v))} />
               <Legend />
               <Bar dataKey="labor" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Labor" stackId="a" />
               <Bar dataKey="fuel" fill="#f59e0b" radius={[0, 0, 0, 0]} name="Fuel" stackId="a" />

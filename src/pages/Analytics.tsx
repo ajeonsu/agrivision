@@ -139,7 +139,7 @@ export default function Analytics() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="month" fontSize={12} tickLine={false} />
             <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₱${v / 1000}k`} />
-            <Tooltip formatter={(v: number) => peso(v)} />
+            <Tooltip formatter={(v) => peso(Number(v))} />
             <Legend />
             <Bar dataKey="revenue" fill="#16a34a" radius={[4, 4, 0, 0]} name="Revenue" />
             <Bar dataKey="expenses" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expenses" />
@@ -168,7 +168,7 @@ export default function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="year" fontSize={12} tickLine={false} />
                 <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₱${v / 1000000}M`} />
-                <Tooltip formatter={(v: number) => peso(v)} />
+                <Tooltip formatter={(v) => peso(Number(v))} />
                 <Legend />
                 <Bar dataKey="harvest" fill="#16a34a" radius={[4, 4, 0, 0]} name="Harvest Season" />
                 <Bar dataKey="nonHarvest" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Non-Harvest Season" />
@@ -231,7 +231,7 @@ export default function Analytics() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="month" fontSize={12} tickLine={false} />
             <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₱${v / 1000}k`} />
-            <Tooltip formatter={(v: number) => peso(v)} />
+            <Tooltip formatter={(v) => peso(Number(v))} />
             <Legend />
             <Area type="monotone" dataKey="actual" stroke="#16a34a" fill="url(#actGrad)" strokeWidth={2.5} name="Actual Revenue" connectNulls={false} />
             <Area type="monotone" dataKey="predicted" stroke="#8b5cf6" fill="url(#predGrad)" strokeWidth={2.5} strokeDasharray="6 3" name="Predicted Revenue" connectNulls={false} />

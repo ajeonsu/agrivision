@@ -71,7 +71,7 @@ function OwnerDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" fontSize={12} tickLine={false} />
               <YAxis fontSize={12} tickLine={false} tickFormatter={(v) => `₱${v / 1000}k`} />
-              <Tooltip formatter={(v: number) => peso(v)} />
+              <Tooltip formatter={(v) => peso(Number(v))} />
               <Area type="monotone" dataKey="revenue" stroke="#16a34a" fill="url(#revGrad)" strokeWidth={2} name="Revenue" />
               <Area type="monotone" dataKey="expenses" stroke="#ef4444" fill="url(#expGrad)" strokeWidth={2} name="Expenses" />
             </AreaChart>
