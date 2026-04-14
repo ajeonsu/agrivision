@@ -37,7 +37,7 @@ export default function Resources() {
         <p className="text-slate-500 text-sm mt-1">Track and manage key business assets — machines, workers, and vehicles</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="bg-card rounded-xl p-4 shadow-sm border border-slate-100 text-center">
           <p className="text-2xl font-bold text-slate-800">{resources.length}</p>
           <p className="text-xs text-slate-500 mt-1">Total Resources</p>
@@ -60,7 +60,7 @@ export default function Resources() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {['All', 'Machine', 'Worker', 'Vehicle'].map((t) => (
           <button
             key={t}

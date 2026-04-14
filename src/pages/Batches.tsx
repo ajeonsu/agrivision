@@ -21,17 +21,17 @@ export default function Batches() {
 
       <div className="bg-card rounded-xl shadow-sm border border-slate-100 p-5">
         <h3 className="text-sm font-semibold text-slate-700 mb-4">Batch Flow Pipeline</h3>
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center justify-between gap-2 flex-wrap overflow-x-auto pb-1">
           {statusFlow.map((s, i) => {
             const count = batches.filter(b => b.status === s).length;
             const st = statusStyle[s];
             return (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`rounded-xl px-4 py-3 ${st.bg} text-center min-w-[100px]`}>
-                  <p className={`text-2xl font-bold ${st.text}`}>{count}</p>
-                  <p className="text-xs text-slate-600 mt-0.5">{s}</p>
+              <div key={s} className="flex items-center gap-2 shrink-0">
+                <div className={`rounded-xl px-3 sm:px-4 py-2 sm:py-3 ${st.bg} text-center min-w-[70px] sm:min-w-[100px]`}>
+                  <p className={`text-xl sm:text-2xl font-bold ${st.text}`}>{count}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-600 mt-0.5">{s}</p>
                 </div>
-                {i < statusFlow.length - 1 && <ArrowRight size={16} className="text-slate-300 shrink-0" />}
+                {i < statusFlow.length - 1 && <ArrowRight size={14} className="text-slate-300 shrink-0 hidden sm:block" />}
               </div>
             );
           })}

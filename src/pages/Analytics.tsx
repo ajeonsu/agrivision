@@ -77,21 +77,21 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Data Analytics</h1>
-          <p className="text-slate-500 text-sm mt-1">Accounting, comparison, and prediction of sales — data-driven decision support</p>
+          <p className="text-slate-500 text-sm mt-1">Accounting, comparison, and prediction of sales</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button onClick={() => handleExport('csv')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-sm font-medium text-slate-700 transition-colors">
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-sm font-medium text-slate-700 transition-colors">
             <FileDown size={16} />
-            Export CSV
+            <span className="hidden sm:inline">Export</span> CSV
           </button>
           <button onClick={() => handleExport('full')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/25">
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-primary/25">
             <FileDown size={16} />
-            Generate Report
+            <span className="hidden sm:inline">Generate</span> Report
           </button>
         </div>
       </div>
